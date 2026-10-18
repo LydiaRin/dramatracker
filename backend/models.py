@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
     pass
@@ -32,3 +32,4 @@ class WatchlistEntry(Base):
     drama_id: Mapped[int] = mapped_column(ForeignKey("dramas.id"))
     status: Mapped[str] = mapped_column(default="watching")
     current_episode: Mapped[int] = mapped_column(default=0)
+    drama: Mapped["Drama"] = relationship()

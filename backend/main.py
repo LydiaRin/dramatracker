@@ -39,6 +39,7 @@ class WatchlistOut(BaseModel):
     drama_id: int
     status: str
     current_episode: int
+    drama: DramaOut
 
 # ----- 2. Helper functions ---------------------------------------------------
 
@@ -82,7 +83,8 @@ def add_drama(tmdb_id: int, db: Session = Depends(get_db)):
 
 @app.get("/watchlist",response_model=list[WatchlistOut])
 def list_watchlist_dramas(db: Session = Depends(get_db)):
-    return db.scalars(select(WatchlistEntry)).all()
+    return db.scalars(select(WatchlistEntry).
+                      where(WatchlistEntry.user_id == CURRENT_USER_ID)).all()
 
 @app.post("/watchlist/{tmdb_id}", response_model=WatchlistOut)
 def add_drama_to_watchlist(tmdb_id: int, db: Session = Depends(get_db)):
