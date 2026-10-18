@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 import httpx
 
-MAX_PAGES = 5  
+MAX_PAGES = 10
 
 load_dotenv()
 auth = "Bearer " + os.environ["TMDB_API_KEY"]
@@ -40,4 +40,14 @@ def get_watch_providers(tmdb_id):
     response = httpx.get(f"{BASE_URL}/tv/{tmdb_id}/watch/providers", headers=HEADERS)
     response.raise_for_status()
     return response.json()["results"]
-     
+
+def discover_popular(page):
+    params = {
+        "with_original_language": "zh",
+        "sort_by": "popularity.desc",
+        "without_genres": "16",
+        "page": page,
+    }
+    response = httpx.get(f"{BASE_URL}/discover/tv", params=params, headers=HEADERS)
+    response.raise_for_status()
+    return response.json()["results"]
