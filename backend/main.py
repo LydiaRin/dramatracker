@@ -1,6 +1,5 @@
-from fastapi import FastAPI, HTTPException, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Depends
+from fastapi.security import HTTPBearer
 from pydantic import BaseModel, EmailStr, Field, ConfigDict 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
