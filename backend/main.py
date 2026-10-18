@@ -1,13 +1,15 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr, Field # object validity and python <-> json 
+from pydantic import BaseModel, EmailStr, Field, ConfigDict 
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+from datetime import datetime
 
 # from user import create_user, authenticate_user, create_session, end_session, get_user_email
 from db import get_db
-from models import Base
-from tmdb import search_tmdb
+from models import Drama
+from tmdb import search_tmdb, get_drama
 
 
 app = FastAPI()
@@ -22,6 +24,17 @@ class UserCredentials(BaseModel):
     password: str = Field(min_length=8, max_length=72)
 
 
+# ----- 2. DB ops class -------------------------------------------------------
+
+class DramaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    tmdb_id: int
+    title: str
+    original_title: str | None
+    total_episodes: int | None
+    poster_path: str | None
+    last_synced_at: datetime
 
 # ----- 2. Helper functions ---------------------------------------------------
 
@@ -40,7 +53,7 @@ def health():
 
 @app.get("/dramas")
 def list_dramas(db: Session = Depends(get_db)):
-    return []
+    return db.scalars(select(Drama)).all()
 
 @app.get("/dramas/search")
 def search_dramas(q: str):
@@ -52,7 +65,20 @@ def search_dramas(q: str):
                            "poster_path": row.get("poster_path")})
     return drama_list
 
-
+@app.post("/dramas/{tmdb_id}", response_model=DramaOut)
+def add_drama(tmdb_id: int, db: Session = Depends(get_db)):
+    existing = db.scalar(select(Drama).where(Drama.tmdb_id == tmdb_id))
+    if existing: 
+        return existing
+    data = get_drama(tmdb_id)
+    drama = Drama(tmdb_id = tmdb_id, title=data["name"],
+                  original_title = data["original_name"],
+                  total_episodes=data["number_of_episodes"],
+                  poster_path = data.get("poster_path"))
+    db.add(drama)
+    db.commit()
+    db.refresh(drama)
+    return drama
 
 # GET /dramas/search?q=...
 # def search_dramas(q: str):
