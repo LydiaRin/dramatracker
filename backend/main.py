@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 # from user import create_user, authenticate_user, create_session, end_session, get_user_email
 from db import get_db
 from models import Base
+from tmdb import search_tmdb
 
 
 app = FastAPI()
@@ -19,6 +20,7 @@ bearer = HTTPBearer()
 class UserCredentials(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=72)
+
 
 
 # ----- 2. Helper functions ---------------------------------------------------
@@ -39,6 +41,24 @@ def health():
 @app.get("/dramas")
 def list_dramas(db: Session = Depends(get_db)):
     return []
+
+@app.get("/dramas/search")
+def search_dramas(q: str):
+    results = search_tmdb(q)
+    drama_list=[]
+    for row in results:
+        drama_list.append({"tmdb_id": row["id"], "title": row["name"], 
+                           "original_title": row["original_name"], 
+                           "poster_path": row.get("poster_path")})
+    return drama_list
+
+
+
+# GET /dramas/search?q=...
+# def search_dramas(q: str):
+#     results = search_tv(q)
+#     return a trimmed list: for each show, keep only
+#         tmdb_id, title, original_title, poster_path
 
 # @app.post("/auth/register")
 # def register_user(user: UserCredentials):
