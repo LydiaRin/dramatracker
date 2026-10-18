@@ -7,23 +7,20 @@ from datetime import datetime
 
 # from user import create_user, authenticate_user, create_session, end_session, get_user_email
 from db import get_db
-from models import Drama
+from models import Drama, WatchlistEntry
 from tmdb import search_tmdb, get_drama
 
 
 app = FastAPI()
 bearer = HTTPBearer()
 
+CURRENT_USER_ID = 1
 
 # ---- 1. Class using Pydantic BaseModel --------------------------------------
 
 # --- User ---
-class UserCredentials(BaseModel):
-    email: EmailStr
-    password: str = Field(min_length=8, max_length=72)
 
-
-# ----- 2. DB ops class -------------------------------------------------------
+# --- DB ops class ---
 
 class DramaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -35,14 +32,29 @@ class DramaOut(BaseModel):
     poster_path: str | None
     last_synced_at: datetime
 
+class WatchlistOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
+    drama_id: int
+    status: str
+    current_episode: int
+
 # ----- 2. Helper functions ---------------------------------------------------
 
-# def get_current_user(credentials: HTTPAuthorizationCredentials=Depends(bearer)):
-#     email = get_user_email(credentials.credentials)
-#     if email is None:
-#         raise HTTPException(status_code=401, detail="Invalid token")
-#     return email
-
+def get_or_create_drama(tmdb_id: int, db: Session):
+    existing = db.scalar(select(Drama).where(Drama.tmdb_id == tmdb_id))
+    if existing: 
+        return existing
+    data = get_drama(tmdb_id)
+    drama = Drama(tmdb_id = tmdb_id, title=data["name"],
+                  original_title = data["original_name"],
+                  total_episodes=data["number_of_episodes"],
+                  poster_path = data.get("poster_path"))
+    db.add(drama)
+    db.commit()
+    db.refresh(drama)
+    return drama
 
 # ----- 3. Endpoints ----------------------------------------------------------
 
@@ -50,7 +62,7 @@ class DramaOut(BaseModel):
 def health():
     return {"status": "ok"}
 
-@app.get("/dramas")
+@app.get("/dramas",response_model=list[DramaOut])
 def list_dramas(db: Session = Depends(get_db)):
     return db.scalars(select(Drama)).all()
 
@@ -66,44 +78,24 @@ def search_dramas(q: str):
 
 @app.post("/dramas/{tmdb_id}", response_model=DramaOut)
 def add_drama(tmdb_id: int, db: Session = Depends(get_db)):
-    existing = db.scalar(select(Drama).where(Drama.tmdb_id == tmdb_id))
-    if existing: 
-        return existing
-    data = get_drama(tmdb_id)
-    drama = Drama(tmdb_id = tmdb_id, title=data["name"],
-                  original_title = data["original_name"],
-                  total_episodes=data["number_of_episodes"],
-                  poster_path = data.get("poster_path"))
-    db.add(drama)
+    return get_or_create_drama(tmdb_id, db)
+
+@app.get("/watchlist",response_model=list[WatchlistOut])
+def list_watchlist_dramas(db: Session = Depends(get_db)):
+    return db.scalars(select(WatchlistEntry)).all()
+
+@app.post("/watchlist/{tmdb_id}", response_model=WatchlistOut)
+def add_drama_to_watchlist(tmdb_id: int, db: Session = Depends(get_db)):
+    drama = get_or_create_drama(tmdb_id, db)
+    existing = db.scalar(select(WatchlistEntry).where(
+                            WatchlistEntry.user_id == CURRENT_USER_ID,
+                            WatchlistEntry.drama_id == drama.id,
+                        ))#change CURRENT_USER_ID to user_id later 
+    if existing: return existing
+    entry = WatchlistEntry(user_id = CURRENT_USER_ID, 
+                           drama_id=drama.id)
+    db.add(entry)
     db.commit()
-    db.refresh(drama)
-    return drama
+    db.refresh(entry)
+    return entry
 
-# GET /dramas/search?q=...
-# def search_dramas(q: str):
-#     results = search_tv(q)
-#     return a trimmed list: for each show, keep only
-#         tmdb_id, title, original_title, poster_path
-
-# @app.post("/auth/register")
-# def register_user(user: UserCredentials):
-#     if not create_user(user.email, user.password):
-#         raise HTTPException(status_code=409, detail="Email already registered")
-#     return{"message" : "User registered"}
-
-# @app.post("/auth/login")
-# def user_login(user: UserCredentials):
-#     if not authenticate_user(user.email, user.password):
-#         raise HTTPException(status_code=401, detail="Invalid email or password")
-#     token = create_session(user.email)
-#     return {"token": token,"email" : user.email}
-
-# @app.post("/auth/logout")
-# def user_logout(credentials: HTTPAuthorizationCredentials = Depends(bearer)):
-#     if end_session(credentials.credentials) is None:
-#         raise HTTPException(status_code=401, detail="Invalid token")
-#     return {"message": "Logged out"}
-
-# @app.get("/auth/me")
-# def valid_token(current_user: str = Depends(get_current_user)):
-#     return {"email": current_user}
