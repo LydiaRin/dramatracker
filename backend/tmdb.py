@@ -34,3 +34,10 @@ def get_drama(tmdb_id):
     response = httpx.get(f"{BASE_URL}/tv/{tmdb_id}", headers=HEADERS)
     response.raise_for_status()
     return response.json()
+
+
+def get_watch_providers(tmdb_id):
+    response = httpx.get(f"{BASE_URL}/tv/{tmdb_id}/watch/providers", headers=HEADERS)
+    response.raise_for_status()
+    return response.json()["results"]
+     

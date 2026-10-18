@@ -36,12 +36,22 @@ class WatchlistEntry(Base):
     platform: Mapped["Platform | None"] = relationship()
     drama: Mapped["Drama"] = relationship()
 
-
-
 class Platform(Base):
     __tablename__ = "platforms"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
+    tmdb_provider_id: Mapped[int | None] = mapped_column(unique=True)
+    logo_path: Mapped[str | None]
+
+class DramaPlatform(Base):
+    __tablename__ = "drama_platforms"
+    __table_args__ = (UniqueConstraint("drama_id", "platform_id", "region", "type"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    drama_id: Mapped[int] = mapped_column(ForeignKey("dramas.id"))
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platforms.id"))
+    region: Mapped[str] = mapped_column(default="US")
+    type: Mapped[str]            # "flatrate", "ads", "buy", "rent"
+    platform: Mapped["Platform"] = relationship()
 
 class Subscription(Base):
     __tablename__ = "subscriptions"
