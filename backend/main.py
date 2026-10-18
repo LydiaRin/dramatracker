@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, EmailStr, Field, ConfigDict 
 from sqlalchemy.orm import Session
@@ -41,6 +41,10 @@ class WatchlistOut(BaseModel):
     current_episode: int
     drama: DramaOut
 
+class WatchlistUpdate(BaseModel):
+    current_episode: int | None = Field(default=None, ge=0)
+    status: str | None = None
+
 # ----- 2. Helper functions ---------------------------------------------------
 
 def get_or_create_drama(tmdb_id: int, db: Session):
@@ -56,6 +60,15 @@ def get_or_create_drama(tmdb_id: int, db: Session):
     db.commit()
     db.refresh(drama)
     return drama
+
+def get_entry(entry_id: int, db: Session):
+    entry = db.scalar(select(WatchlistEntry).where(
+                        WatchlistEntry.id == entry_id,
+                        WatchlistEntry.user_id == CURRENT_USER_ID,
+                        ))
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Drama not in Watchlist")
+    return entry
 
 # ----- 3. Endpoints ----------------------------------------------------------
 
@@ -101,3 +114,25 @@ def add_drama_to_watchlist(tmdb_id: int, db: Session = Depends(get_db)):
     db.refresh(entry)
     return entry
 
+@app.delete("/watchlist/{entry_id}", status_code=204)
+def del_drama_from_watchlist(entry_id: int, db: Session = Depends(get_db)):
+    entry = get_entry(entry_id, db)
+    db.delete(entry)
+    db.commit()
+    return
+    
+
+@app.patch("/watchlist/{entry_id}", response_model=WatchlistOut)
+def update_watchlist_entry(entry_id: int, update: WatchlistUpdate, db: Session = Depends(get_db)):
+    entry = get_entry(entry_id, db)
+    if update.current_episode is not None:
+        total = entry.drama.total_episodes
+        if total is not None and update.current_episode > total:
+            raise HTTPException(status_code=400,
+                                detail=f"Episode must be between 0 and {total}")
+        entry.current_episode = update.current_episode
+    if update.status is not None:
+        entry.status = update.status
+    db.commit()
+    db.refresh(entry)
+    return entry
