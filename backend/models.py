@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Integer, String, DateTime
+from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
@@ -17,3 +17,18 @@ class Drama(Base):
                     DateTime(timezone=True), 
                     default=lambda: datetime.now(timezone.utc))
     
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(unique=True)
+
+class WatchlistEntry(Base):
+    __tablename__ = "watchlist_entries"
+    __table_args__ = (UniqueConstraint("user_id", "drama_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    drama_id: Mapped[int] = mapped_column(ForeignKey("dramas.id"))
+    status: Mapped[str] = mapped_column(default="watching")
+    current_episode: Mapped[int] = mapped_column(default=0)
