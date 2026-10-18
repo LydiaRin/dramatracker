@@ -1,5 +1,5 @@
-from datetime import datetime, timezone
-from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint
+from datetime import datetime, timezone, date
+from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint, Date
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
@@ -32,4 +32,23 @@ class WatchlistEntry(Base):
     drama_id: Mapped[int] = mapped_column(ForeignKey("dramas.id"))
     status: Mapped[str] = mapped_column(default="watching")
     current_episode: Mapped[int] = mapped_column(default=0)
+    platform_id: Mapped[int | None] = mapped_column(ForeignKey("platforms.id"))
+    platform: Mapped["Platform | None"] = relationship()
     drama: Mapped["Drama"] = relationship()
+
+
+
+class Platform(Base):
+    __tablename__ = "platforms"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(unique=True)
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+    __table_args__ = (UniqueConstraint("user_id", "platform_id"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platforms.id"))
+    tier: Mapped[str] = mapped_column(default="free")
+    renewal_date: Mapped[date | None] = mapped_column(Date)
+    platform: Mapped["Platform"] = relationship()
