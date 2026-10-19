@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import HTTPBearer
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr, Field, ConfigDict 
 from sqlalchemy.orm import Session
 from sqlalchemy import select
@@ -13,6 +14,7 @@ from services import get_or_create_drama
 
 
 app = FastAPI()
+app.mount("/ui", StaticFiles(directory="../frontend", html=True), name="ui")
 bearer = HTTPBearer()
 
 CURRENT_USER_ID = 1
@@ -164,7 +166,7 @@ def update_watchlist_entry(entry_id: int, update: WatchlistUpdate, db: Session =
         entry.status = update.status
     if update.platform_id is not None:
         if db.get(Platform, update.platform_id) is None:
-           raise HTTPException(status_code=404, detail="Platform not found")
+            raise HTTPException(status_code=404, detail="Platform not found")
         entry.platform_id = update.platform_id
 
     db.commit()
