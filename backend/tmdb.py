@@ -41,11 +41,15 @@ def get_watch_providers(tmdb_id):
     response.raise_for_status()
     return response.json()["results"]
 
-def discover_popular(page):
+def discover_top_cdramas(page):
     params = {
+        "with_origin_country": "CN",        # made in mainland China
         "with_original_language": "zh",
-        "sort_by": "popularity.desc",
-        "without_genres": "16",
+        "with_type": "4",                   # Scripted: no reality/talk/docs
+        "without_genres": "16,10764,10767,10762,99",  # no animation, reality, talk, kids, documentary
+        "with_runtime.gte": 30,             # cuts out 2–10 min micro-dramas
+        "vote_count.gte": 30,               # ignore 10/10 from 3 votes
+        "sort_by": "vote_average.desc",     # top rated, like MDL's so=rated
         "page": page,
     }
     response = httpx.get(f"{BASE_URL}/discover/tv", params=params, headers=HEADERS)
