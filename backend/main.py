@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr, Field, ConfigDict 
@@ -14,8 +15,14 @@ from services import get_or_create_drama
 
 
 app = FastAPI()
-app.mount("/ui", StaticFiles(directory="../frontend", html=True), name="ui")
 bearer = HTTPBearer()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 CURRENT_USER_ID = 1
 
