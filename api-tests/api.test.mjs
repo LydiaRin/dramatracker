@@ -83,7 +83,60 @@ describe('discover deck', () => {
     assert.ok(deck.data.every((d) => !onList.has(d.id)))
   })
 
-  test('POST /discover/{drama_id} saves a swipe', { todo: 'endpoint not built yet' })
+    test('POST /discover/{drama_id} classifies want / watched / rewatch', async () => {
+    // Three different deck cards, one per choice; each lands on the watchlist and is removed after
+    const deck = await call('GET', '/discover?limit=3')
+    assert.ok(deck.data.length === 3, 'need at least 3 dramas in the deck')
+    const cases = [
+      { drama: deck.data[0], choice: 'want', status: 'planned', rewatch: false },
+      { drama: deck.data[1], choice: 'watched', status: 'done', rewatch: false },
+      { drama: deck.data[2], choice: 'rewatch', status: 'done', rewatch: true },
+    ]
+    const created = []
+    try {
+      for (const c of cases) {
+        const res = await call('POST', `/discover/${c.drama.id}`, { choice: c.choice })
+        assert.equal(res.status, 204, `${c.choice} should return 204`)
+      }
+
+      const list = await call('GET', '/watchlist')
+      for (const c of cases) {
+        const entry = list.data.find((e) => e.drama_id === c.drama.id)
+        assert.ok(entry, `${c.choice}: drama should be on the watchlist`)
+        created.push(entry.id)
+        assert.equal(entry.status, c.status)
+        // watched/rewatch mark the whole drama as seen
+        if (c.status === 'done') assert.equal(entry.current_episode, c.drama.total_episodes ?? 0)
+      }
+
+      // Classifying the same card again must not create a duplicate
+      const again = await call('POST', `/discover/${cases[0].drama.id}`, { choice: 'want' })
+      assert.equal(again.status, 204)
+      const listAgain = await call('GET', '/watchlist')
+      assert.equal(listAgain.data.filter((e) => e.drama_id === cases[0].drama.id).length, 1)
+
+      // Classified dramas leave the deck
+      const deckNow = await call('GET', '/discover?limit=200')
+      for (const c of cases) assert.ok(deckNow.data.every((d) => d.id !== c.drama.id))
+    } finally {
+      for (const id of created) await call('DELETE', `/watchlist/${id}`)
+    }
+  })
+
+  test('POST /discover/{drama_id} rejects an unknown choice', async () => {
+    const deck = await call('GET', '/discover?limit=1')
+    const { status } = await call('POST', `/discover/${deck.data[0].id}`, { choice: 'maybe' })
+    assert.equal(status, 422)
+  })
+
+  test('POST /discover/{drama_id} gives 404 for an unknown drama', async () => {
+    const { status } = await call('POST', '/discover/999999999', { choice: 'want' })
+    assert.equal(status, 404)
+  })
+
+  test('POST /discover/{drama_id} with "no" dismisses the drama', {
+    skip: 'no API way to undo a dismissal yet, so running it would remove a real drama from your deck',
+  })
 })
 
 describe('platforms and subscriptions', () => {

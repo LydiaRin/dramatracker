@@ -1,11 +1,8 @@
 from pydantic import BaseModel, Field, ConfigDict 
 from datetime import datetime, date
+from typing import Literal
 
-# ---- 1. Class using Pydantic BaseModel --------------------------------------
-
-# --- User ---
-
-# --- DB ops class ---
+# ---- Class using Pydantic BaseModel --------------------------------------
 
 class DramaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -36,6 +33,10 @@ class WatchlistUpdate(BaseModel):
     current_episode: int | None = Field(default=None, ge=0)
     status: str | None = None
     platform_id: int | None = None
+
+
+class ClassifyIn(BaseModel):
+    choice: Literal["want", "no", "watched", "rewatch"]
 
 class SubscriptionIn(BaseModel):
     tier: str = "free"

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from schemas import DramaOut
+from schemas import DramaOut, ClassifyIn
 from store.db import get_db
 
 from controllers import discover_controller as dc
@@ -10,3 +10,7 @@ router = APIRouter(prefix="/discover", tags=["discover"])
 @router.get("", response_model=list[DramaOut])
 def discover_deck(limit: int = 20, db: Session = Depends(get_db)):
     return dc.load_deck(db, limit)
+
+@router.post("/{drama_id}", status_code=204)
+def classify_drama(drama_id: int, body: ClassifyIn, db: Session = Depends(get_db)):
+    dc.classify_drama(drama_id, body, db)

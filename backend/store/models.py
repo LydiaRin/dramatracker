@@ -37,13 +37,12 @@ class WatchlistEntry(Base):
     platform: Mapped["Platform | None"] = relationship()
     drama: Mapped["Drama"] = relationship()
 
-class DismissedDramas(Base):
+class DismissedDrama(Base):
     __tablename__ = "dismissed_dramas"
     __table_args__ = (UniqueConstraint("user_id", "drama_id"),)
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    drama_id: Mapped[int] = mapped_column(ForeignKey("dramas.id"))
-    
+    drama_id: Mapped[int] = mapped_column(ForeignKey("dramas.id"))    
 
 class Platform(Base):
     __tablename__ = "platforms"
