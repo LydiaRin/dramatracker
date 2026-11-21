@@ -9,7 +9,7 @@ from datetime import datetime, date
 
 # from user import create_user, authenticate_user, create_session, end_session, get_user_email
 from db import get_db
-from models import Drama, WatchlistEntry, Platform, Subscription
+from models import Drama, WatchlistEntry, Platform, Subscription, DismissedDramas
 from tmdb import search_tmdb
 from services import get_or_create_drama
 
@@ -119,6 +119,7 @@ def set_subscription(platform_id: int, body: SubscriptionIn, db: Session = Depen
 def list_subscriptions(db: Session = Depends(get_db)):
     return db.scalars(select(Subscription).
                       where(Subscription.user_id == CURRENT_USER_ID)).all()
+
 @app.get("/dramas/search")
 def search_dramas(q: str):
     results = search_tmdb(q)
@@ -162,6 +163,7 @@ def del_drama_from_watchlist(entry_id: int, db: Session = Depends(get_db)):
     
 @app.patch("/watchlist/{entry_id}", response_model=WatchlistOut)
 def update_watchlist_entry(entry_id: int, update: WatchlistUpdate, db: Session = Depends(get_db)):
+
     entry = get_entry(entry_id, db)
     if update.current_episode is not None:
         total = entry.drama.total_episodes
@@ -179,3 +181,13 @@ def update_watchlist_entry(entry_id: int, update: WatchlistUpdate, db: Session =
     db.commit()
     db.refresh(entry)
     return entry
+
+@app.get("/discover", response_model=list[DramaOut])
+def discover_deck(limit: int = 20, db: Session = Depends(get_db)):
+    on_list = select(WatchlistEntry.drama_id).where(
+        WatchlistEntry.user_id == CURRENT_USER_ID)
+    dismissed = select(DismissedDramas.drama_id).where(
+        DismissedDramas.user_id == CURRENT_USER_ID)
+    return db.scalars(select(Drama)
+        .where(Drama.id.not_in(on_list), Drama.id.not_in(dismissed))
+        .order_by(Drama.id).limit(limit)).all()

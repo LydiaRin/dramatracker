@@ -1,5 +1,5 @@
 from datetime import datetime, timezone, date
-from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint, Date
+from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint, Date, Boolean
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
@@ -33,8 +33,17 @@ class WatchlistEntry(Base):
     status: Mapped[str] = mapped_column(default="watching")
     current_episode: Mapped[int] = mapped_column(default=0)
     platform_id: Mapped[int | None] = mapped_column(ForeignKey("platforms.id"))
+    rewatch: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     platform: Mapped["Platform | None"] = relationship()
     drama: Mapped["Drama"] = relationship()
+
+class DismissedDramas(Base):
+    __tablename__ = "dismissed_dramas"
+    __table_args__ = (UniqueConstraint("user_id", "drama_id"),)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    drama_id: Mapped[int] = mapped_column(ForeignKey("dramas.id"))
+    
 
 class Platform(Base):
     __tablename__ = "platforms"
