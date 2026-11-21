@@ -134,8 +134,40 @@ describe('discover deck', () => {
     assert.equal(status, 404)
   })
 
-  test('POST /discover/{drama_id} with "no" dismisses the drama', {
-    skip: 'no API way to undo a dismissal yet, so running it would remove a real drama from your deck',
+    test('"no" dismisses a drama, and DELETE /discover/{drama_id} undoes it', async () => {
+    const deck = await call('GET', '/discover?limit=1')
+    const drama = deck.data[0]
+    let dismissed = false
+    try {
+      const res = await call('POST', `/discover/${drama.id}`, { choice: 'no' })
+      assert.equal(res.status, 204)
+      dismissed = true
+
+      // A dismissed drama leaves the deck but is NOT added to the watchlist
+      const deckNow = await call('GET', '/discover?limit=200')
+      assert.ok(deckNow.data.every((d) => d.id !== drama.id))
+      const list = await call('GET', '/watchlist')
+      assert.ok(list.data.every((e) => e.drama_id !== drama.id))
+
+      // Saying "no" twice is harmless
+      const again = await call('POST', `/discover/${drama.id}`, { choice: 'no' })
+      assert.equal(again.status, 204)
+    } finally {
+      // Undo, so your real deck is left as it was
+      if (dismissed) {
+        const undo = await call('DELETE', `/discover/${drama.id}`)
+        assert.equal(undo.status, 204)
+      }
+    }
+
+    // After undoing, the drama is back in the deck
+    const deckAfter = await call('GET', '/discover?limit=200')
+    assert.ok(deckAfter.data.some((d) => d.id === drama.id))
+  })
+
+  test('DELETE /discover/{drama_id} gives 404 for an unknown drama', async () => {
+    const { status } = await call('DELETE', '/discover/999999999')
+    assert.equal(status, 404)
   })
 })
 

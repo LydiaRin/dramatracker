@@ -14,3 +14,7 @@ def discover_deck(limit: int = 20, db: Session = Depends(get_db)):
 @router.post("/{drama_id}", status_code=204)
 def classify_drama(drama_id: int, body: ClassifyIn, db: Session = Depends(get_db)):
     dc.classify_drama(drama_id, body, db)
+
+@router.delete("/{drama_id}", status_code=204)
+def undo_dismissal(drama_id: int, db: Session = Depends(get_db)):
+    dc.undo_dismissal(db, drama_id)

@@ -40,4 +40,12 @@ def classify_drama(drama_id: int, body: ClassifyIn, db: Session):
         db.commit()
 
     
-
+def undo_dismissal(db: Session, drama_id: int):
+    dc.get_drama_by_id(db, drama_id)
+    entry = db.scalar(select(DismissedDrama).where(
+        DismissedDrama.user_id == CURRENT_USER_ID,
+        DismissedDrama.drama_id == drama_id))
+    if not entry: return
+    
+    db.delete(entry)
+    db.commit()
