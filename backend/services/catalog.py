@@ -1,8 +1,11 @@
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from models import Drama, Platform, DramaPlatform
-from tmdb import get_drama, get_watch_providers
+from store.models import Drama, Platform, DramaPlatform, WatchlistEntry
+from services.tmdb import get_drama, get_watch_providers
+
+from dependencies import CURRENT_USER_ID
 
 def get_or_create_platform(db: Session, tmdb_provider_id: int, name: str, logo_path: str | None):
     existing = db.scalar(select(Platform).where(Platform.tmdb_provider_id == tmdb_provider_id))
@@ -47,3 +50,4 @@ def get_or_create_drama(tmdb_id: int, db: Session):
     db.refresh(drama)
     sync_providers(db, drama)
     return drama
+
