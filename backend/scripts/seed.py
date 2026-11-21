@@ -1,11 +1,11 @@
 from sqlalchemy import select
 
-from db import SessionLocal
-from models import Drama
-from tmdb import discover_top_cdramas, get_drama
-from services import get_or_create_drama, sync_providers
+from store.db import SessionLocal
+from store.models import Drama
+from services.tmdb import discover_top_cdramas, get_drama
+from services.catalog import upsert_drama, sync_providers
 
-PAGES = 10          # 20 dramas per page → up to ~100
+PAGES = 100          # 20 dramas per page → up to ~100
 MIN_EPISODES = 12  # skip specials and very short series
 
 
@@ -14,13 +14,18 @@ def main():
     try:
         # 1. Top-rated C-dramas (new ones get providers synced automatically)
         for page in range(1, PAGES + 1):
-            for show in discover_top_cdramas(page):
+            try:
+                shows = discover_top_cdramas(page)
+            except Exception as e:
+                print(f"✗ page {page}: {e}")
+                continue
+            for show in shows:
                 try:
                     details = get_drama(show["id"])
                     if (details.get("number_of_episodes") or 0) < MIN_EPISODES:
                         print(f"– skipped {show.get('name')} (too short)")
                         continue
-                    drama = get_or_create_drama(show["id"], db)
+                    drama = upsert_drama(db, details)
                     print(f"✓ {drama.title}")
                 except Exception as e:
                     db.rollback()

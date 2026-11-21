@@ -1,6 +1,7 @@
 from datetime import datetime, timezone, date
-from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint, Date, Boolean
+from sqlalchemy import Integer, String, DateTime, ForeignKey, UniqueConstraint, Date, Boolean, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from pgvector.sqlalchemy import Vector
 
 class Base(DeclarativeBase):
     pass
@@ -13,6 +14,9 @@ class Drama(Base):
     original_title: Mapped[str | None] = mapped_column(String)
     total_episodes: Mapped[int | None]
     poster_path: Mapped[str | None]
+    overview: Mapped[str | None] =mapped_column(Text)
+    genres: Mapped[str | None]
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(1024))
     last_synced_at: Mapped[datetime] = mapped_column(
                     DateTime(timezone=True), 
                     default=lambda: datetime.now(timezone.utc))

@@ -1,0 +1,57 @@
+.discover { padding-top: 48px; padding-bottom: 80px; }
+.discover-head { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 14px; margin-bottom: 32px; }
+.discover-head h1 { font-size: 40px; }
+.discover-zh { font-size: 32px; line-height: 1; }
+.discover-count { margin-left: auto; }
+
+.discover-body { display: flex; flex-wrap: wrap; gap: 48px; align-items: center; justify-content: center; margin-top: 16px; }
+
+.swipe-card {
+  width: 300px; background: var(--card); border: 1px solid var(--line-soft); border-radius: 18px;
+  overflow: hidden; box-shadow: 0 14px 30px rgba(43, 40, 38, 0.12);
+  animation: card-in 0.25s ease-out;
+}
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(12px) rotate(-1deg); }
+  to { opacity: 1; transform: none; }
+}
+.swipe-poster { border-radius: 0; }
+.swipe-poster.poster-empty .poster-zh { font-size: 40px; }
+.swipe-info { padding: 16px 20px 20px; }
+.swipe-info h2 { font-size: 26px; line-height: 1.1; }
+.swipe-zh { margin: 4px 0; font-size: 22px; color: var(--red); }
+.swipe-info .small { margin: 4px 0 0; }
+
+.swipe-side { display: flex; flex-direction: column; gap: 18px; }
+.swipe-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 230px)); gap: 14px; }
+.swipe-btn {
+  font: inherit; cursor: pointer; min-height: 64px; padding: 10px 16px;
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 14px;
+}
+.swipe-btn:hover:not(:disabled) { border-color: var(--ink); }
+.swipe-btn:disabled { opacity: 0.6; cursor: default; }
+.swipe-btn-zh { font-size: 22px; min-width: 44px; }
+kbd {
+  font-family: inherit; font-size: 12px;
+  border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; color: var(--ink-soft);
+}
+.swipe-btn kbd { margin-left: auto; }
+.swipe-want { background: var(--red); color: var(--card); border-color: var(--red); }
+.swipe-want kbd { color: var(--card); border-color: rgba(251, 248, 242, 0.5); }
+.swipe-want:hover:not(:disabled) { border-color: #7A1F22; }
+.swipe-rewatch .swipe-btn-zh { color: var(--plum); }
+.swipe-no .swipe-btn-zh { color: var(--ink-soft); }
+
+.swipe-last { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font-size: 14px; }
+.link-btn {
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--red);
+  background: none; border: 0; cursor: pointer; padding: 6px 0; min-height: 44px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.link-btn:disabled { opacity: 0.5; cursor: default; }
+
+@media (max-width: 640px) {
+  .swipe-buttons { grid-template-columns: 1fr 1fr; }
+  .swipe-card { width: 100%; max-width: 320px; }
+}

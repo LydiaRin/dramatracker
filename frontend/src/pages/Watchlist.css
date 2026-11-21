@@ -1,0 +1,43 @@
+.watchlist { padding-top: 48px; padding-bottom: 80px; }
+
+.wl-tabs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+.wl-tab {
+  font: inherit; font-size: 15px; font-weight: 500; cursor: pointer;
+  min-height: 44px; padding: 0 18px; border-radius: 999px;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--card); color: var(--ink); border: 1px solid var(--line);
+}
+.wl-tab .brush { font-size: 18px; color: var(--red); }
+.wl-tab.active { background: var(--ink); color: var(--card); border-color: var(--ink); }
+.wl-tab.active .brush { color: var(--plum); }
+.wl-count { font-size: 12px; opacity: 0.7; }
+
+.wl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.wl-row {
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+  background: var(--card); border: 1px solid var(--line-soft); border-radius: 14px; padding: 14px 20px;
+}
+.wl-poster { width: 64px; flex-shrink: 0; border-radius: 8px; }
+.wl-poster.poster-empty { padding-top: 8px; }
+.wl-poster .poster-zh { font-size: 16px; letter-spacing: 1px; }
+
+.wl-info { flex: 1 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.wl-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; line-height: 1.1; }
+.wl-zh { font-size: 18px; color: var(--red); }
+.wl-info .bar { max-width: 360px; }
+
+.wl-controls { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.wl-stepper { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 999px; }
+.wl-stepper button {
+  font: inherit; font-size: 20px; cursor: pointer; width: 44px; height: 44px;
+  background: none; border: 0; color: var(--ink);
+}
+.wl-stepper button:disabled { opacity: 0.3; cursor: default; }
+.wl-stepper span { min-width: 32px; text-align: center; font-weight: 600; }
+
+.wl-select {
+  font: inherit; font-size: 14px; min-height: 44px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink);
+}
+.wl-remove { color: var(--ink-soft); }
+.wl-remove:hover:not(:disabled) { color: var(--red); }

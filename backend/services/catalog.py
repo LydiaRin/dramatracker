@@ -1,11 +1,9 @@
-from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from datetime import datetime, timezone
 
-from store.models import Drama, Platform, DramaPlatform, WatchlistEntry
+from store.models import Drama, Platform, DramaPlatform
 from services.tmdb import get_drama, get_watch_providers
-
-from dependencies import CURRENT_USER_ID
 
 def get_or_create_platform(db: Session, tmdb_provider_id: int, name: str, logo_path: str | None):
     existing = db.scalar(select(Platform).where(Platform.tmdb_provider_id == tmdb_provider_id))
@@ -36,18 +34,26 @@ def sync_providers(db: Session, drama: Drama, region="US"):
                                     region=region, type=type))
     db.commit()
 
-def get_or_create_drama(tmdb_id: int, db: Session):
-    existing = db.scalar(select(Drama).where(Drama.tmdb_id == tmdb_id))
-    if existing: 
-        return existing
-    data = get_drama(tmdb_id)
-    drama = Drama(tmdb_id = tmdb_id, title=data["name"],
-                  original_title = data["original_name"],
-                  total_episodes=data["number_of_episodes"],
-                  poster_path = data.get("poster_path"))
-    db.add(drama)
+
+def upsert_drama(db: Session, data: dict) -> Drama:
+    drama = db.scalar(select(Drama).where(Drama.tmdb_id == data["id"]))
+    if drama is None:
+        drama = Drama(tmdb_id=data["id"])
+        db.add(drama)
+    drama.title = data["name"]
+    drama.original_title = data.get("original_name")
+    drama.total_episodes = data.get("number_of_episodes")
+    drama.poster_path = data.get("poster_path")
+    drama.overview = data.get("overview") or None
+    drama.genres = ", ".join(g["name"] for g in data.get("genres", [])) or None
+    drama.last_synced_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(drama)
     sync_providers(db, drama)
     return drama
 
+def get_or_create_drama(tmdb_id: int, db: Session):
+    existing = db.scalar(select(Drama).where(Drama.tmdb_id == tmdb_id))
+    if existing:
+        return existing
+    return upsert_drama(db, get_drama(tmdb_id))
