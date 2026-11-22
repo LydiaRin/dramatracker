@@ -513,6 +513,10 @@ function Discover() {
               ))}
             </div>
 
+            <Link to={`/drama/${card.id}`} className="link-btn details-link">
+              Full details →
+            </Link>
+
             {lastAction && (
               <p className="swipe-last">
                 <span className="muted">

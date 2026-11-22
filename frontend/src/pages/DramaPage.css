@@ -1,0 +1,38 @@
+/* A drama's own page: its poster and backdrop on top, then my list and the AI chat */
+.container.drama-page { padding-top: 48px; padding-bottom: 80px; }
+
+.drama-hero { min-height: 600px; }
+.drama-hero-content { align-items: flex-end; gap: 40px; padding-bottom: 72px; }
+.poster.drama-poster { width: 230px; flex-shrink: 0; box-shadow: 0 0 0 1px var(--accent), 0 30px 70px rgba(0, 0, 0, 0.6); }
+.drama-hero .hero-text { max-width: 620px; }
+.drama-hero .hero-title { font-size: 34px; }
+.drama-hero .hero-zh { font-size: clamp(72px, 8vw, 124px); }
+.drama-overview { margin: 16px 0 0; color: #D9D2C6; line-height: 1.75; }
+.drama-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.drama-tag { border: 1px solid var(--line-strong); padding: 5px 10px; color: var(--ink); }
+
+.container.drama-body {
+  padding-top: 48px; padding-bottom: 48px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start;
+}
+.drama-panel { border: 1px solid var(--line); padding: 22px 24px; background: var(--surface); }
+.drama-panel .section-head { margin-bottom: 18px; }
+.drama-panel .section-head h2 { font-size: 22px; }
+.drama-panel .section-zh { font-size: 26px; }
+
+.drama-entry { display: flex; flex-direction: column; gap: 20px; }
+.drama-progress { display: flex; align-items: center; gap: 18px; }
+.drama-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.drama-add { display: flex; flex-wrap: wrap; gap: 10px; }
+.drama-add-zh { font-size: 18px; letter-spacing: 0; color: var(--accent); }
+
+@media (max-width: 900px) {
+  .container.drama-body { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .drama-hero-content { flex-direction: column; align-items: flex-start; gap: 24px; padding-top: 24px; }
+  .poster.drama-poster { width: 150px; }
+  .drama-hero .hero-vertical { display: none; }
+  .drama-hero .hero-title { font-size: 24px; }
+  .drama-panel { padding: 18px 16px; }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { api, errorText } from '../api'
-import type { WatchlistEntry } from '../api'
+import type { Platform, WatchlistEntry } from '../api'
 import Poster from '../components/Poster'
 import { accentStyle } from '../accent'
 import './Watchlist.css'
@@ -20,15 +20,19 @@ function isStatus(value: string | null): value is Status {
   return TABS.some((t) => t.status === value)
 }
 
+type Changes = { current_episode?: number; status?: string; platform_id?: number }
+
 function Row({
   entry,
+  platforms,
   busy,
   onChange,
   onRemove,
 }: {
   entry: WatchlistEntry
+  platforms: Platform[]
   busy: boolean
-  onChange: (changes: { current_episode?: number; status?: string }) => void
+  onChange: (changes: Changes) => void
   onRemove: () => void
 }) {
   const total = entry.drama.total_episodes
@@ -49,7 +53,9 @@ function Row({
       <Poster path={entry.drama.poster_path} title={entry.drama.title} fallback={entry.drama.original_title} className="wl-poster" />
 
       <div className="wl-info">
-        <span className="wl-title">{entry.drama.title}</span>
+        <Link to={`/drama/${entry.drama.id}`} className="wl-title">
+          {entry.drama.title}
+        </Link>
         {entry.drama.original_title && <span className="brush wl-zh">{entry.drama.original_title}</span>}
         <span className="muted small">
           {total ? `Episode ${entry.current_episode} of ${total}` : `Episode ${entry.current_episode}`}
@@ -85,6 +91,24 @@ function Row({
           ))}
         </select>
 
+        {/* Where she watches it; the platform list comes from the providers TMDB reported */}
+        <select
+          className="wl-select"
+          value={entry.platform?.id ?? ''}
+          onChange={(e) => e.target.value && onChange({ platform_id: Number(e.target.value) })}
+          disabled={busy || platforms.length === 0}
+          aria-label="Platform"
+        >
+          <option value="" disabled>
+            Watching on…
+          </option>
+          {platforms.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+
         <button type="button" className="link-btn wl-remove" onClick={onRemove} disabled={busy}>
           Remove
         </button>
@@ -95,6 +119,7 @@ function Row({
 
 function Watchlist() {
   const [entries, setEntries] = useState<WatchlistEntry[]>([])
+  const [platforms, setPlatforms] = useState<Platform[]>([])
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [busyId, setBusyId] = useState<number | null>(null)
@@ -111,9 +136,13 @@ function Watchlist() {
         setLoaded(true)
       })
       .catch((e) => setError(errorText(e)))
+    api
+      .platforms()
+      .then((list) => setPlatforms([...list].sort((a, b) => a.name.localeCompare(b.name))))
+      .catch(() => setPlatforms([]))
   }, [])
 
-  async function update(entry: WatchlistEntry, changes: { current_episode?: number; status?: string }) {
+  async function update(entry: WatchlistEntry, changes: Changes) {
     setBusyId(entry.id)
     setError(null)
     try {
@@ -180,6 +209,7 @@ function Watchlist() {
           <Row
             key={entry.id}
             entry={entry}
+            platforms={platforms}
             busy={busyId === entry.id}
             onChange={(changes) => update(entry, changes)}
             onRemove={() => remove(entry)}

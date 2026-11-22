@@ -38,6 +38,15 @@ export type Subscription = {
   platform: Platform
 }
 
+// A search hit: `id` is set only when the drama is already in our catalog (SearchResult)
+export type SearchResult = {
+  id: number | null
+  tmdb_id: number
+  title: string
+  original_title: string | null
+  poster_path: string | null
+}
+
 // The four answers a deck card can get (ClassifyIn in the backend)
 export type Choice = 'want' | 'no' | 'watched' | 'rewatch'
 
@@ -99,5 +108,18 @@ export const api = {
     request<WatchlistEntry>('PATCH', `/watchlist/${entryId}`, changes),
   removeEntry: (entryId: number) => request<void>('DELETE', `/watchlist/${entryId}`),
 
+  // Adds to the list by TMDB id: the backend saves the drama to the catalog first if it is new
+  addToList: (tmdbId: number) => request<WatchlistEntry>('POST', `/watchlist/${tmdbId}`),
+
+  search: (q: string) => request<SearchResult[]>('GET', `/dramas/search?q=${encodeURIComponent(q)}`),
+  drama: (dramaId: number) => request<Drama>('GET', `/dramas/${dramaId}`),
+  // Saves a TMDB drama to the catalog (posters, synopsis, platforms, embedding) without listing it
+  addToCatalog: (tmdbId: number) => request<Drama>('POST', `/dramas/${tmdbId}`),
+
+  platforms: () => request<Platform[]>('GET', '/platforms'),
   subscriptions: () => request<Subscription[]>('GET', '/subscriptions'),
+  setSubscription: (platformId: number, body: { tier: string; renewal_date: string | null }) =>
+    request<Subscription>('PUT', `/subscriptions/${platformId}`, body),
+
+  health: () => request<{ status: string }>('GET', '/health'),
 }

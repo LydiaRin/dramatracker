@@ -106,7 +106,7 @@
 .swipe-card.is-dragging { cursor: grabbing; transition: none; }
 .swipe-card img { -webkit-user-drag: none; pointer-events: none; }
 
-.swipe-poster { flex: 1; min-height: 0; aspect-ratio: auto; object-fit: cover; object-position: center top; }
+.poster.swipe-poster { flex: 1; min-height: 0; aspect-ratio: auto; object-fit: cover; object-position: center top; }
 .swipe-poster.poster-empty .poster-zh { font-size: 44px; }
 
 /* Front: the poster alone. The title lives in the column beside the card,

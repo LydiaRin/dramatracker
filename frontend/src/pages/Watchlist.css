@@ -23,7 +23,7 @@
   background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%);
 }
 .wl-row:hover { border-color: var(--accent); }
-.wl-poster { width: 62px; flex-shrink: 0; }
+.poster.wl-poster { width: 62px; flex-shrink: 0; }
 .wl-poster.poster-empty { padding-top: 8px; }
 .wl-poster .poster-zh { font-size: 16px; letter-spacing: 1px; }
 

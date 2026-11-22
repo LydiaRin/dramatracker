@@ -45,7 +45,7 @@ function ProgressBar({ entry }: { entry: WatchlistEntry }) {
 
 function ContinueItem({ entry }: { entry: WatchlistEntry }) {
   return (
-    <Link to="/watchlist?tab=watching" className="continue-item" style={accentStyle(entry.drama.accent)}>
+    <Link to={`/drama/${entry.drama.id}`} className="continue-item" style={accentStyle(entry.drama.accent)}>
       <Poster path={entry.drama.poster_path} title={entry.drama.title} fallback={entry.drama.original_title} className="mini-poster" />
       <div className="continue-text">
         <span className="continue-title">{entry.drama.title}</span>
@@ -87,8 +87,8 @@ function Hero({ entry, onEpisode }: { entry: WatchlistEntry; onEpisode: () => vo
             <button type="button" className="btn btn-accent" onClick={onEpisode} disabled={finished}>
               {finished ? 'Finished' : '+1 episode'}
             </button>
-            <Link to="/watchlist?tab=watching" className="btn">
-              My list
+            <Link to={`/drama/${d.id}`} className="btn">
+              Details
             </Link>
           </div>
         </div>

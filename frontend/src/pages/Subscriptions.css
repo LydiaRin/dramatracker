@@ -1,0 +1,25 @@
+.container.subs { padding-top: 32px; padding-bottom: 80px; }
+.subs-intro { max-width: 640px; margin: -10px 0 28px; }
+
+.subs-list { list-style: none; margin: 0 0 18px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.sub-row {
+  display: grid; grid-template-columns: minmax(160px, 1.2fr) minmax(160px, 1fr) minmax(160px, 1.2fr) auto;
+  align-items: center; gap: 20px; padding: 16px 20px; border: 1px solid var(--line); background: var(--surface);
+}
+/* Renewing within a week: lit like the fortune slip */
+.sub-row.soon { border-color: var(--seal); background: linear-gradient(90deg, rgba(224, 38, 46, 0.22), var(--surface) 70%); }
+.sub-name { display: flex; flex-direction: column; gap: 4px; }
+.sub-platform { font-weight: 900; font-size: 18px; text-transform: uppercase; letter-spacing: 0.02em; }
+.sub-when { display: flex; align-items: baseline; gap: 10px; }
+.sub-days { font-weight: 900; font-size: 34px; line-height: 1; }
+.sub-new { display: block; margin-bottom: 18px; }
+
+.sub-form { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 18px; }
+.sub-form label { display: flex; flex-direction: column; gap: 6px; color: var(--ink-soft); }
+.sub-form .text-input { min-width: 160px; color-scheme: dark; }
+.sub-form-actions { display: flex; align-items: center; gap: 14px; }
+
+@media (max-width: 760px) {
+  .sub-row { grid-template-columns: 1fr auto; gap: 10px 16px; }
+  .sub-left { grid-column: 1 / -1; }
+}
