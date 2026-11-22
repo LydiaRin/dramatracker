@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { api, errorText } from '../api'
 import type { WatchlistEntry } from '../api'
 import Poster from '../components/Poster'
+import { accentStyle } from '../accent'
 import './Watchlist.css'
 
 // The statuses the backend uses: "planned" comes from "Want to watch" in the deck,
@@ -44,7 +45,7 @@ function Row({
   }
 
   return (
-    <li className="wl-row">
+    <li className="wl-row" style={accentStyle(entry.drama.accent)}>
       <Poster path={entry.drama.poster_path} title={entry.drama.title} fallback={entry.drama.original_title} className="wl-poster" />
 
       <div className="wl-info">
@@ -142,9 +143,9 @@ function Watchlist() {
 
   return (
     <div className="container watchlist">
-      <div className="discover-head">
+      <div className="wl-head">
+        <span className="brush wl-head-zh">片单</span>
         <h1>My list</h1>
-        <span className="brush red discover-zh">片单</span>
       </div>
 
       <div className="wl-tabs" role="tablist">

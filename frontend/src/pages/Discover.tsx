@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { api, errorText } from '../api'
+import { api, errorText, posterUrl } from '../api'
+import { accentStyle, zhNumber } from '../accent'
 import type { Choice, DeckOrder, Direction, Drama } from '../api'
 import Poster from '../components/Poster'
 import { MOODS } from '../moods'
@@ -372,11 +373,16 @@ function Discover() {
   const talk = card ? talks[card.id] : undefined
   const showDirectionForm = !direction.direction || editingDirection
 
+  const glow = card ? posterUrl(card.poster_path) : null
+
   return (
-    <div className="container discover">
+    // The whole page takes the colour of the drama on the card
+    <div className="discover-page" style={accentStyle(card?.accent)}>
+      {glow && <div className="discover-glow" style={{ backgroundImage: `url(${glow})` }} aria-hidden="true" />}
+      <div className="container discover">
       <div className="discover-head">
+        <span className="brush discover-zh">选剧</span>
         <h1>What should I watch?</h1>
-        <span className="brush red discover-zh">选剧</span>
         <div className="order-toggle" role="group" aria-label="Order the deck">
           <button
             type="button"
@@ -473,7 +479,20 @@ function Discover() {
       {card && (
         <div className="discover-body">
           {/* key gives every drama a fresh card: the entrance animation replays and it starts poster side up */}
+          {/* Poster-style title column: English in spaced capitals, details, then the calligraphy */}
+          <div className="card-titles" aria-hidden="true">
+            <span className="card-titles-en">{card.title}</span>
+            <span className="card-titles-meta">
+              {card.total_episodes ? `共${zhNumber(card.total_episodes)}集` : ''}
+            </span>
+            {card.original_title && <span className="brush glow card-titles-zh">{card.original_title}</span>}
+          </div>
+
           <div className="card-stage">
+            <i className="corner c1" />
+            <i className="corner c2" />
+            <i className="corner c3" />
+            <i className="corner c4" />
             <SwipeCard key={card.id} drama={card} onSwipe={choose} disabled={saving} />
           </div>
 
@@ -567,6 +586,7 @@ function Discover() {
           </div>
         </div>
       )}
+    </div>
     </div>
   )
 }

@@ -2,7 +2,8 @@
 // If an endpoint changes in the backend, this is the only frontend file to update.
 
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
-const POSTER_BASE = 'https://image.tmdb.org/t/p/w342'
+const POSTER_BASE = 'https://image.tmdb.org/t/p/w500'
+const BACKDROP_BASE = 'https://image.tmdb.org/t/p/w1280'
 
 // Shapes mirror the backend's schemas.py (DramaOut, WatchlistOut, SubscriptionOut)
 export type Drama = {
@@ -14,6 +15,8 @@ export type Drama = {
   poster_path: string | null
   overview?: string | null
   genres?: string | null
+  backdrop_path?: string | null   // wide TMDB image, used behind the Home hero
+  accent?: string | null          // the poster's main colour as "#RRGGBB", computed by the backend
   last_synced_at: string
 }
 
@@ -47,6 +50,10 @@ export type Direction = { direction: string | null; description: string | null }
 // TMDB stores only the end of the image path; the size (w342) is chosen here
 export function posterUrl(path: string | null): string | null {
   return path ? POSTER_BASE + path : null
+}
+
+export function backdropUrl(path: string | null | undefined): string | null {
+  return path ? BACKDROP_BASE + path : null
 }
 
 export function errorText(e: unknown): string {

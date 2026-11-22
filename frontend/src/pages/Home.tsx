@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api, errorText } from '../api'
+import { api, backdropUrl, errorText, posterUrl } from '../api'
 import type { Direction, Drama, Subscription, WatchlistEntry } from '../api'
-import HeroArt from '../HeroArt'
+import { accentStyle, zhNumber } from '../accent'
 import DramaCard from '../components/DramaCard'
 import Poster from '../components/Poster'
 import { MOODS } from '../moods'
@@ -14,13 +14,13 @@ function nextRenewal(subs: Subscription[]): Renewal | null {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const upcoming = subs
-  .filter((s) => s.renewal_date)
-  .map((s) => ({
-    sub: s,
-    daysLeft: Math.round((new Date(s.renewal_date + 'T00:00:00').getTime() - today.getTime()) / 86_400_000),
-  }))
-  .filter((r) => r.daysLeft >= 0)
-  .sort((a, b) => a.daysLeft - b.daysLeft)
+    .filter((s) => s.renewal_date)
+    .map((s) => ({
+      sub: s,
+      daysLeft: Math.round((new Date(s.renewal_date + 'T00:00:00').getTime() - today.getTime()) / 86_400_000),
+    }))
+    .filter((r) => r.daysLeft >= 0)
+    .sort((a, b) => a.daysLeft - b.daysLeft)
   return upcoming[0] ?? null
 }
 
@@ -29,34 +29,106 @@ function progressLabel(entry: WatchlistEntry): string {
   return total ? `Episode ${entry.current_episode} of ${total}` : `Episode ${entry.current_episode}`
 }
 
-function ProgressBar({ entry }: { entry: WatchlistEntry }) {
+function percent(entry: WatchlistEntry): number {
   const total = entry.drama.total_episodes
-  const percent = total ? Math.min(100, Math.round((entry.current_episode / total) * 100)) : 0
+  return total ? Math.min(100, Math.round((entry.current_episode / total) * 100)) : 0
+}
+
+function ProgressBar({ entry }: { entry: WatchlistEntry }) {
+  const value = percent(entry)
   return (
-  <div className="bar" role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100}>
-    <div className="bar-fill" style={{ width: `${percent}%` }}></div>
-  </div>
+    <div className="bar" role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100}>
+      <div className="bar-fill" style={{ width: `${value}%` }}></div>
+    </div>
   )
 }
 
-function SideItem({ entry, showProgress }: { entry: WatchlistEntry; showProgress: boolean }) {
+function ContinueItem({ entry }: { entry: WatchlistEntry }) {
   return (
-  <div className="continue-item">
-    <Poster path={entry.drama.poster_path} title={entry.drama.title} fallback={entry.drama.original_title} className="mini-poster" />
-    <div className="continue-text">
-    <span className="continue-title">{entry.drama.title}</span>
-    {showProgress ? (
-      <>
-      <span className="muted small">{progressLabel(entry)}</span>
-      <ProgressBar entry={entry} />
-      </>
-    ) : (
-      <span className="muted small">
-      {entry.drama.total_episodes ? `${entry.drama.total_episodes} episodes` : 'In your queue'}
-      </span>
-    )}
-    </div>
-  </div>
+    <Link to="/watchlist?tab=watching" className="continue-item" style={accentStyle(entry.drama.accent)}>
+      <Poster path={entry.drama.poster_path} title={entry.drama.title} fallback={entry.drama.original_title} className="mini-poster" />
+      <div className="continue-text">
+        <span className="continue-title">{entry.drama.title}</span>
+        <span className="muted small">{progressLabel(entry)}</span>
+        <ProgressBar entry={entry} />
+      </div>
+    </Link>
+  )
+}
+
+// The drama she is watching, shown like its own film poster
+function Hero({ entry, onEpisode }: { entry: WatchlistEntry; onEpisode: () => void }) {
+  const d = entry.drama
+  const total = d.total_episodes
+  const finished = total !== null && entry.current_episode >= total
+  const backdrop = backdropUrl(d.backdrop_path)
+  const art = backdrop ?? posterUrl(d.poster_path)
+  const planned = entry.status === 'planned'
+
+  return (
+    <section className="hero" style={accentStyle(d.accent)}>
+      {art && <img className={backdrop ? 'hero-art' : 'hero-art is-poster'} src={art} alt="" />}
+      <div className="container hero-content">
+        <div className="hero-text">
+          <div className="hero-kicker">
+            <span className="seal">今晚</span>
+            <span className="caps">{planned ? 'Tonight · start something new' : 'Tonight · continue where you left off'}</span>
+          </div>
+          <h1 className="hero-title">{d.title}</h1>
+          {d.overview && <p className="hero-sub">{d.overview}</p>}
+          <div className="hero-progress">
+            <span className="hero-count">
+              {entry.current_episode}
+              {total && <small> / {total} episodes</small>}
+            </span>
+            <ProgressBar entry={entry} />
+          </div>
+          <div className="hero-actions">
+            <button type="button" className="btn btn-accent" onClick={onEpisode} disabled={finished}>
+              {finished ? 'Finished' : '+1 episode'}
+            </button>
+            <Link to="/watchlist?tab=watching" className="btn">
+              My list
+            </Link>
+          </div>
+        </div>
+
+        {d.original_title && (
+          <div className="hero-vertical" aria-hidden="true">
+            <span className="hero-meta">
+              第{zhNumber(Math.max(entry.current_episode, 1))}集{total ? ` · 共${zhNumber(total)}集` : ''}
+              <span className="seal">追</span>
+            </span>
+            <p className="brush glow hero-zh">{d.original_title}</p>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function EmptyHero() {
+  return (
+    <section className="hero" style={accentStyle(null)}>
+      <div className="container hero-content hero-empty">
+        <div className="hero-text">
+          <div className="hero-kicker">
+            <span className="seal">欢迎</span>
+            <span className="caps">Welcome to DramaTracker</span>
+          </div>
+          <h1 className="hero-title">Find your next drama</h1>
+          <p className="hero-sub">Sort a few dramas in the deck and this page fills up with what you are watching and what fits your taste.</p>
+          <div className="hero-actions">
+            <Link to="/discover" className="btn btn-accent">
+              Open the deck
+            </Link>
+          </div>
+        </div>
+        <div className="hero-vertical" aria-hidden="true">
+          <p className="brush glow hero-zh">追剧</p>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -70,7 +142,7 @@ function Home() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([api.deck(10, 'top'), api.watchlist(), api.subscriptions()])
+    Promise.all([api.deck(12, 'top'), api.watchlist(), api.subscriptions()])
       .then(([top, list, subs]) => {
         setTopPicks(top)
         setWatchlist(list)
@@ -80,16 +152,14 @@ function Home() {
       .catch((e) => setError(errorText(e)))
 
     // Kept apart from Promise.all so the rest of Home still loads if these fail
-    api.deck(10, 'for_you').then(setForYou).catch(() => setForYou([]))
+    api.deck(12, 'for_you').then(setForYou).catch(() => setForYou([]))
     api.direction().then(setDirection).catch(() => {})
   }, [])
 
   const watching = watchlist.filter((e) => e.status === 'watching')
-  // "planned" entries are what the user picked as "Want to watch" in the deck
+  // "planned" entries are what she picked as "Want to watch" in the deck
   const queue = watchlist.filter((e) => e.status === 'planned')
   const nextUp = watching[0] ?? queue[0] ?? null
-  const nextUpTotal = nextUp?.drama.total_episodes ?? null
-  const finished = nextUp !== null && nextUpTotal !== null && nextUp.current_episode >= nextUpTotal
 
   // With nothing on the list and no direction, "for you" is just top rated: don't show it twice
   const hasTaste = watchlist.length > 0 || direction.direction !== null
@@ -108,45 +178,16 @@ function Home() {
   }
 
   return (
-    <>
-      <section className="hero">
-        <HeroArt />
-        <div className="container hero-content">
-          <div className="hero-text">
-            <p className="brush hero-zh">欢迎回来</p>
-            <h1 className="hero-title">Welcome back</h1>
-            <p className="hero-sub">
-              {nextUp ? `${nextUp.drama.title} is waiting for you.` : 'Nothing in progress yet. Find your next drama in the deck.'}
-            </p>
-          </div>
-
-          {nextUp && (
-            <article className="next-up">
-              <span className="brush next-up-stamp">今晚</span>
-              <Poster path={nextUp.drama.poster_path} title={nextUp.drama.title} fallback={nextUp.drama.original_title} className="next-up-poster" />
-              <div className="next-up-text">
-                <span className="next-up-label">{nextUp.status === 'planned' ? 'Start next' : 'Next up'}</span>
-                <h2 className="next-up-title">{nextUp.drama.title}</h2>
-                <span className="muted small">{progressLabel(nextUp)}</span>
-                <ProgressBar entry={nextUp} />
-                <div className="next-up-actions">
-                  <button type="button" className="btn btn-dark" onClick={() => addEpisode(nextUp)} disabled={finished}>
-                    {finished ? 'Finished' : '+1 episode'}
-                  </button>
-                </div>
-              </div>
-            </article>
-          )}
-        </div>
-      </section>
+    <div style={accentStyle(nextUp?.drama.accent)}>
+      {nextUp ? <Hero entry={nextUp} onEpisode={() => addEpisode(nextUp)} /> : <EmptyHero />}
 
       <section className="moods">
         <div className="container moods-row">
-          <span className="moods-label">Tonight I want…</span>
+          <span className="moods-label caps">Tonight I want</span>
           {/* Each mood opens the deck already steered in that direction */}
           {MOODS.map((m) => (
             <Link key={m.label} to={`/discover?mood=${encodeURIComponent(m.prompt)}`} className="mood">
-              <span className="brush mood-zh">{m.zh}</span>
+              <span className="mood-zh">{m.zh}</span>
               {m.label}
             </Link>
           ))}
@@ -159,90 +200,89 @@ function Home() {
         </div>
       )}
 
-      <div className="container layout">
-        <main className="main">
-          {showForYou && (
-            <section className="main-section">
-              <div className="section-head">
-                <h2>For you</h2>
-                <span className="brush red section-zh">推荐</span>
-                <Link to="/discover" className="see-all">Open the deck →</Link>
-              </div>
-              {direction.direction && (
-                <p className="muted small steered-by">
-                  Steered by “{direction.direction}”. <Link to="/discover" className="red">Change it in the deck</Link>
-                </p>
-              )}
-              <div className="grid">
-                {forYou.map((d) => (
-                  <DramaCard key={d.id} drama={d} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          <section className="main-section">
+      <div className="container rows">
+        {showForYou && (
+          <section>
             <div className="section-head">
-              <h2>Top rated, not on your list</h2>
-              <span className="brush red section-zh">热播</span>
-              <Link to="/discover" className="see-all">Sort them →</Link>
+              <h2>For you</h2>
+              <span className="section-zh">推荐</span>
+              <Link to="/discover" className="see-all caps">
+                Open the deck →
+              </Link>
             </div>
-            {!loaded && !error && <p className="muted">Unrolling the scroll…</p>}
-            {loaded && topPicks.length === 0 && <p className="muted">You have classified every drama in the catalog.</p>}
+            {direction.direction && <p className="muted small">Steered by “{direction.direction}”.</p>}
             <div className="grid">
-              {otherPicks.map((d, i) => (
-                <DramaCard key={d.id} drama={d} rank={i + 1} />
+              {forYou.slice(0, 6).map((d) => (
+                <DramaCard key={d.id} drama={d} />
               ))}
             </div>
           </section>
-        </main>
+        )}
 
-        <aside className="sidebar">
-          <section className="panel">
-            <div className="panel-head">
+        {(watching.length > 0 || renewal) && (
+          <section>
+            <div className="section-head">
               <h2>Keep watching</h2>
-              <span className="brush red">追剧</span>
-              <Link to="/watchlist?tab=watching" className="see-all">All →</Link>
+              <span className="section-zh">追剧</span>
+              <Link to="/watchlist?tab=watching" className="see-all caps">
+                My list →
+              </Link>
             </div>
-            {loaded && watching.length === 0 && <p className="muted small">Nothing in progress.</p>}
-            <div className="stack">
+            <div className="strip">
               {watching.slice(0, 5).map((entry) => (
-                <SideItem key={entry.id} entry={entry} showProgress />
+                <ContinueItem key={entry.id} entry={entry} />
               ))}
+              {renewal && (
+                <div className="fortune">
+                  <span className="seal" aria-hidden="true">签</span>
+                  <div>
+                    <p className="fortune-label caps">Fortune slip</p>
+                    <p className="fortune-title">
+                      {renewal.sub.platform.name} {renewal.sub.tier}{' '}
+                      {renewal.daysLeft === 0 ? 'renews today' : `renews in ${renewal.daysLeft} day${renewal.daysLeft === 1 ? '' : 's'}`}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
+        )}
 
-          {renewal && (
-            <section className="fortune">
-              <span className="brush fortune-bg" aria-hidden="true">签</span>
-              <p className="brush fortune-label">Fortune slip</p>
-              <p className="fortune-title">
-                {renewal.sub.platform.name} {renewal.sub.tier}{' '}
-                {renewal.daysLeft === 0 ? 'renews today' : `renews in ${renewal.daysLeft} day${renewal.daysLeft === 1 ? '' : 's'}`}
-              </p>
-            </section>
-          )}
-
-          <section className="panel">
-            <div className="panel-head">
+        {queue.length > 0 && (
+          <section>
+            <div className="section-head">
               <h2>Your queue</h2>
-              <span className="brush red">想看</span>
-              <Link to="/watchlist?tab=planned" className="see-all">All →</Link>
+              <span className="section-zh">想看</span>
+              <Link to="/watchlist?tab=planned" className="see-all caps">
+                All →
+              </Link>
             </div>
-            {loaded && queue.length === 0 && (
-              <p className="muted small">
-                Empty for now. <Link to="/discover" className="red">Pick some in the deck</Link>
-              </p>
-            )}
-            <div className="stack">
-              {queue.slice(0, 5).map((entry) => (
-                <SideItem key={entry.id} entry={entry} showProgress={false} />
+            <div className="grid">
+              {queue.slice(0, 6).map((entry) => (
+                <DramaCard key={entry.id} drama={entry.drama} />
               ))}
             </div>
           </section>
-        </aside>
+        )}
+
+        <section>
+          <div className="section-head">
+            <h2>Top rated</h2>
+            <span className="section-zh">热播</span>
+            <Link to="/discover" className="see-all caps">
+              Sort them →
+            </Link>
+          </div>
+          {!loaded && !error && <p className="muted">Loading…</p>}
+          {loaded && topPicks.length === 0 && <p className="muted">You have classified every drama in the catalog.</p>}
+          <div className="grid">
+            {otherPicks.slice(0, 6).map((d, i) => (
+              <DramaCard key={d.id} drama={d} rank={i + 1} />
+            ))}
+          </div>
+        </section>
       </div>
-    </>
+    </div>
   )
 }
 

@@ -12,7 +12,7 @@ function Layout() {
           {/* Search is not wired to the API yet, so the box is disabled rather than pretending to work */}
           <label className="search">
             <span className="visually-hidden">Search dramas</span>
-            <input type="search" placeholder="Search is coming soon…" disabled />
+            <input type="search" placeholder="Search dramas, 剧名… (coming soon)" disabled />
           </label>
           <nav className="nav">
             <NavLink to="/" end>Home</NavLink>
