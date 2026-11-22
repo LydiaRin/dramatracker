@@ -6,6 +6,7 @@ import httpx
 from store.models import Drama, Platform, DramaPlatform
 from services.tmdb import get_drama, get_watch_providers
 from services.llm import embedding_text, embed
+from services.accent import poster_accent
 
 def get_or_create_platform(db: Session, tmdb_provider_id: int, name: str, logo_path: str | None):
     existing = db.scalar(select(Platform).where(Platform.tmdb_provider_id == tmdb_provider_id))
@@ -46,6 +47,11 @@ def upsert_drama(db: Session, data: dict) -> Drama:
     drama.original_title = data.get("original_name")
     drama.total_episodes = data.get("number_of_episodes")
     drama.poster_path = data.get("poster_path")
+    drama.backdrop_path = data.get("backdrop_path")
+    try:
+        drama.accent = poster_accent(drama.poster_path)
+    except httpx.HTTPError:
+        pass  # keep the old colour (or none); the next sync tries again
     drama.overview = data.get("overview") or None
     drama.genres = ", ".join(g["name"] for g in data.get("genres", [])) or None
     if drama.overview:
