@@ -1,7 +1,8 @@
 from sqlalchemy import select
-from services.llm import embed 
+from services.llm import embedding_text, embed 
 from store.db import SessionLocal
 from store.models import Drama
+
 
 def main():
     db = SessionLocal()
@@ -10,7 +11,7 @@ def main():
                                                 Drama.overview.is_not(None))).all()
         for i, drama in enumerate (dramas, 1):
             try:
-                text = f"{drama.title}. Genres: {drama.genres}. {drama.overview}"
+                text = embedding_text(drama)
                 drama.embedding = embed(text)
                 print(f"{i}/{len(dramas)} {drama.title}")
                 if i % 20 == 0:

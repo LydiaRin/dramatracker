@@ -12,6 +12,10 @@ class DramaOut(BaseModel):
     original_title: str | None
     total_episodes: int | None
     poster_path: str | None
+    overview: str | None = None    # shown on the deck card so she can decide
+    genres: str | None = None
+    backdrop_path: str | None = None
+    accent: str | None = None
     last_synced_at: datetime
 
 class PlatformOut(BaseModel):
@@ -56,3 +60,18 @@ class SearchResult(BaseModel):
     title: str
     original_title: str | None
     poster_path: str | None
+
+# ---- Discover deck: direction and talking with the local AI ----------------
+
+class DirectionIn(BaseModel):
+    text: str = Field(min_length=1, max_length=500)
+
+class DirectionOut(BaseModel):
+    direction: str | None          # what she typed
+    description: str | None        # qwen's rewrite, which is what gets embedded
+
+class AskIn(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+
+class TextOut(BaseModel):
+    text: str

@@ -12,6 +12,8 @@ export type Drama = {
   original_title: string | null
   total_episodes: number | null
   poster_path: string | null
+  overview?: string | null
+  genres?: string | null
   last_synced_at: string
 }
 
@@ -35,6 +37,12 @@ export type Subscription = {
 
 // The four answers a deck card can get (ClassifyIn in the backend)
 export type Choice = 'want' | 'no' | 'watched' | 'rewatch'
+
+// "for_you" ranks by her taste (list + dismissals + typed direction); "top" is top rated
+export type DeckOrder = 'for_you' | 'top'
+
+// What she typed to steer the deck, and qwen's rewrite of it (DirectionOut)
+export type Direction = { direction: string | null; description: string | null }
 
 // TMDB stores only the end of the image path; the size (w342) is chosen here
 export function posterUrl(path: string | null): string | null {
@@ -67,10 +75,17 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 }
 
 export const api = {
-  deck: (limit = 20) => request<Drama[]>('GET', `/discover?limit=${limit}`),
-  recommendations: (limit = 10) => request<Drama[]>('GET', `/recommendations?limit=${limit}`),
+  deck: (limit = 20, order: DeckOrder = 'for_you') => request<Drama[]>('GET', `/discover?limit=${limit}&order=${order}`),
   classify: (dramaId: number, choice: Choice) => request<void>('POST', `/discover/${dramaId}`, { choice }),
   undoDismissal: (dramaId: number) => request<void>('DELETE', `/discover/${dramaId}`),
+
+  // These three go through the local LLM: expect 10-30 s on CPU
+  direction: () => request<Direction>('GET', '/discover/direction'),
+  setDirection: (text: string) => request<Direction>('PUT', '/discover/direction', { text }),
+  clearDirection: () => request<void>('DELETE', '/discover/direction'),
+  ask: (dramaId: number, question: string) =>
+    request<{ text: string }>('POST', `/discover/${dramaId}/ask`, { question }).then((r) => r.text),
+  reason: (dramaId: number) => request<{ text: string }>('GET', `/discover/${dramaId}/reason`).then((r) => r.text),
 
   watchlist: () => request<WatchlistEntry[]>('GET', '/watchlist'),
   updateEntry: (entryId: number, changes: { current_episode?: number; status?: string; platform_id?: number }) =>

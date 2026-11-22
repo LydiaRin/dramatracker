@@ -17,6 +17,10 @@ class Drama(Base):
     overview: Mapped[str | None] =mapped_column(Text)
     genres: Mapped[str | None]
     embedding: Mapped[list[float] | None] = mapped_column(Vector(1024))
+    backdrop_path: Mapped[str | None]                     # wide TMDB image for the Home hero
+    accent: Mapped[str | None] = mapped_column(String(7))  # poster's main colour, "#RRGGBB"
+    # qwen's "why you might like it", cached because it takes 10-30 s to generate on CPU
+    reason: Mapped[str | None] = mapped_column(Text)
     last_synced_at: Mapped[datetime] = mapped_column(
                     DateTime(timezone=True), 
                     default=lambda: datetime.now(timezone.utc))
@@ -26,6 +30,11 @@ class User(Base):
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(unique=True)
+    # Free-text steering for the Discover deck ("something light, modern setting"),
+    # qwen's rewrite of it as a drama description, and the embedding of that rewrite
+    direction: Mapped[str | None] = mapped_column(Text)
+    direction_description: Mapped[str | None] = mapped_column(Text)
+    direction_embedding: Mapped[list[float] | None] = mapped_column(Vector(1024))
 
 class WatchlistEntry(Base):
     __tablename__ = "watchlist_entries"

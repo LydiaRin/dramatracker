@@ -53,5 +53,131 @@ kbd {
 
 @media (max-width: 640px) {
   .swipe-buttons { grid-template-columns: 1fr 1fr; }
-  .swipe-card { width: 100%; max-width: 320px; }
+  .swipe-card { width: 100%; max-width: 300px; }
+  .swipe-card.is-back { max-width: 100%; }
 }
+
+/* ---------- Order toggle (For you / Top rated) ---------- */
+.order-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--card); }
+.order-btn {
+  font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+  min-height: 38px; padding: 0 14px; border: 0; border-radius: 999px;
+  background: none; color: var(--ink); display: inline-flex; align-items: center; gap: 6px;
+}
+.order-btn .brush { color: var(--red); font-size: 17px; }
+.order-btn.active { background: var(--ink); color: var(--card); }
+.order-btn.active .brush { color: var(--plum); }
+
+/* ---------- The deck talking: direction ---------- */
+.steer {
+  display: flex; gap: 18px; align-items: flex-start;
+  background: var(--card); border: 1px solid var(--line-soft); border-radius: 16px;
+  padding: 20px 24px; margin-bottom: 28px;
+}
+.steer-seal {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 6px; transform: rotate(-5deg);
+  background: var(--red); color: var(--card); font-size: 26px;
+  display: flex; align-items: center; justify-content: center;
+}
+.steer-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.steer-line { margin: 0; font-size: 16px; }
+.steer-description {
+  margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 19px; font-style: italic; line-height: 1.35;
+  border-left: 3px solid var(--plum); padding-left: 12px;
+}
+.steer-actions { display: flex; flex-wrap: wrap; gap: 18px; }
+.steer-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.steer-form .text-input { flex: 1 1 280px; }
+.steer-moods { display: flex; flex-wrap: wrap; gap: 8px; }
+.mood-small { font: inherit; font-size: 13px; cursor: pointer; min-height: 38px; padding: 0 12px; }
+.mood-small .mood-zh { font-size: 17px; }
+.muted-link { color: var(--ink-soft); }
+
+.text-input {
+  font: inherit; font-size: 15px; min-height: 44px; padding: 0 16px; min-width: 0;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--paper); color: var(--ink);
+}
+.text-input:focus { outline: 2px solid var(--plum); outline-offset: 1px; border-color: transparent; }
+
+/* Pulsing while qwen writes (10–30 s on CPU) */
+.thinking { color: var(--ink-soft); animation: breathe 1.6s ease-in-out infinite; }
+@keyframes breathe { 50% { opacity: 0.45; } }
+
+/* ---------- Card: poster front, synopsis back, same size on both sides ---------- */
+.discover-body { align-items: flex-start; }
+.swipe-side { max-width: 480px; flex: 1 1 340px; min-width: 0; }
+
+.swipe-card {
+  width: 340px; height: 600px; flex-shrink: 0;
+  display: flex; flex-direction: column;
+  transition: transform 0.22s ease-in;
+}
+/* Edge-on while the sides swap, then it turns back from the other side */
+.swipe-card.is-turning { transform: perspective(900px) rotateY(90deg); }
+.swipe-card.is-back,
+.swipe-card.is-returned { animation: card-turn-in 0.28s ease-out; }
+@keyframes card-turn-in {
+  from { transform: perspective(900px) rotateY(-90deg); }
+  to { transform: none; }
+}
+
+/* The poster fills whatever height the title block leaves */
+.swipe-poster {
+  aspect-ratio: auto; flex: 1; min-height: 0;
+  object-fit: cover; object-position: center top;
+}
+.swipe-info { padding: 14px 18px 16px; }
+.flip-btn { margin-top: 6px; min-height: 36px; padding: 0; }
+
+.swipe-back {
+  height: 100%; padding: 22px 24px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.swipe-back-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+.swipe-back-head h2 { font-size: 26px; line-height: 1.1; }
+.swipe-back .swipe-zh { margin: 0; }
+/* Long synopses scroll inside the card instead of stretching it */
+.swipe-overview {
+  margin: 8px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink);
+  flex: 1; min-height: 0; overflow-y: auto;
+}
+.swipe-back .flip-btn { align-self: flex-start; }
+
+/* ---------- Talking about one drama ---------- */
+.talk { background: var(--card); border: 1px solid var(--line-soft); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+.talk-head { display: flex; align-items: baseline; gap: 8px; }
+.talk-head h3 { margin: 0; font-family: 'Cormorant Garamond', serif; font-size: 22px; }
+.talk-head .brush { font-size: 20px; }
+.talk-question { margin: 0; align-self: flex-end; max-width: 85%; background: var(--paper-dark); border-radius: 14px 14px 4px 14px; padding: 8px 12px; font-size: 14px; }
+.talk-pair { display: flex; flex-direction: column; gap: 8px; }
+.talk-answer { margin: 0; font-size: 14px; line-height: 1.5; display: flex; gap: 10px; }
+.talk-who { flex-shrink: 0; color: var(--red); font-size: 18px; line-height: 1.2; }
+.talk-error { margin: 0; font-size: 13px; color: #7A1F22; }
+.talk-form { display: flex; gap: 8px; }
+.talk-form .text-input { flex: 1; }
+.talk-note { margin: 0; }
+
+@media (max-width: 640px) {
+  .steer { padding: 16px; gap: 12px; }
+  .steer-seal { width: 36px; height: 36px; font-size: 20px; }
+  .discover-count { margin-left: 0; width: 100%; }
+}
+@media (max-width: 640px) {
+  .swipe-side { flex-basis: 100%; }
+  .swipe-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+
+/* Fixed slot: fits both the upright front and the sideways back,
+   so flipping never moves the buttons or the chat next to it */
+.card-stage {
+  width: 340px; height: 600px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 48px;
+}
+@media (max-width: 640px) {
+  .card-stage { width: 100%; height: 560px; margin-bottom: 24px; }
+  .swipe-card { width: 100%; max-width: 340px; height: 560px; }
+}
+
+@media (prefers-reduced-motion: reduce) { .thinking, .swipe-card, .swipe-card.is-back, .swipe-card.is-returned { animation: none; transition: none; } }

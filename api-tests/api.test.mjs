@@ -1,6 +1,6 @@
 // API tests for the DramaTracker backend.
 // Needs the backend running:  cd backend && uvicorn main:app --reload
-// Run from frontend/:          npm run test:api
+// Run from api-tests/:         npm test   (the "local AI" tests also need Ollama running)
 //
 // These tests only change data they clean up again: the watchlist tests use a drama
 // taken from the discover deck (so it is NOT already on your list) and delete it at the end.
@@ -239,5 +239,65 @@ describe('watchlist lifecycle (cleans up after itself)', () => {
 
     const gone = await call('DELETE', `/watchlist/${entryId}`)
     assert.equal(gone.status, 404)
+  })
+})
+// These call the local AI (Ollama), so they are slow on CPU and need Ollama running.
+// They put your deck direction back the way it was at the end.
+describe('discover deck + local AI', () => {
+  test('GET /discover?order=top and order=for_you both answer; a bad order is rejected', async () => {
+    const top = await call('GET', '/discover?limit=5&order=top')
+    const forYou = await call('GET', '/discover?limit=5&order=for_you')
+    assert.equal(top.status, 200)
+    assert.equal(forYou.status, 200)
+    const bad = await call('GET', '/discover?order=random')
+    assert.equal(bad.status, 422)
+  })
+
+  test('PUT /discover/direction steers the deck, DELETE clears it', { timeout: 240_000 }, async () => {
+    const before = await call('GET', '/discover/direction')
+    assert.equal(before.status, 200)
+    try {
+      const set = await call('PUT', '/discover/direction', { text: 'a light, funny modern romance' })
+      assert.equal(set.status, 200)
+      assert.equal(set.data.direction, 'a light, funny modern romance')
+      assert.ok(set.data.description, 'qwen should return a rewritten description')
+
+      const got = await call('GET', '/discover/direction')
+      assert.equal(got.data.direction, 'a light, funny modern romance')
+
+      const deck = await call('GET', '/discover?limit=5')
+      assert.equal(deck.status, 200)
+
+      const cleared = await call('DELETE', '/discover/direction')
+      assert.equal(cleared.status, 204)
+      const after = await call('GET', '/discover/direction')
+      assert.equal(after.data.direction, null)
+    } finally {
+      // Restore the direction you had before the test
+      if (before.data.direction) await call('PUT', '/discover/direction', { text: before.data.direction })
+    }
+  })
+
+  test('an empty direction is rejected', async () => {
+    const { status } = await call('PUT', '/discover/direction', { text: '' })
+    assert.equal(status, 422)
+  })
+
+  test('POST /discover/{id}/ask answers a question about a drama', { timeout: 240_000 }, async () => {
+    const deck = await call('GET', '/discover?limit=1')
+    const { status, data } = await call('POST', `/discover/${deck.data[0].id}/ask`, { question: 'Is it sad?' })
+    // 400 only when TMDB has no synopsis for that drama
+    assert.ok(status === 200 || status === 400, `unexpected ${status}`)
+    if (status === 200) assert.ok(data.text)
+  })
+
+  test('POST /discover/{id}/ask gives 404 for an unknown drama', async () => {
+    const { status } = await call('POST', '/discover/999999999/ask', { question: 'Is it sad?' })
+    assert.equal(status, 404)
+  })
+
+  test('GET /discover/{id}/reason gives 404 for an unknown drama', async () => {
+    const { status } = await call('GET', '/discover/999999999/reason')
+    assert.equal(status, 404)
   })
 })

@@ -1,9 +1,11 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+import httpx
 
 from store.models import Drama, Platform, DramaPlatform
 from services.tmdb import get_drama, get_watch_providers
+from services.llm import embedding_text, embed
 
 def get_or_create_platform(db: Session, tmdb_provider_id: int, name: str, logo_path: str | None):
     existing = db.scalar(select(Platform).where(Platform.tmdb_provider_id == tmdb_provider_id))
@@ -46,6 +48,11 @@ def upsert_drama(db: Session, data: dict) -> Drama:
     drama.poster_path = data.get("poster_path")
     drama.overview = data.get("overview") or None
     drama.genres = ", ".join(g["name"] for g in data.get("genres", [])) or None
+    if drama.overview:
+        try:
+            drama.embedding = embed(embedding_text(drama))
+        except httpx.HTTPError:
+            pass
     drama.last_synced_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(drama)

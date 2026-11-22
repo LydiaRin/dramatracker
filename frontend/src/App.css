@@ -15,6 +15,7 @@ a:hover { color: var(--red); }
 .btn {
   font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
   min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid var(--ink);
+  background: var(--card); color: var(--ink);
 }
 .btn-dark { background: var(--ink); color: var(--card); }
 .btn:disabled { opacity: 0.5; cursor: default; }
@@ -117,6 +118,8 @@ a:hover { color: var(--red); }
 .section-head { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 14px; margin-bottom: 28px; }
 .section-head h2 { font-size: 36px; }
 .main-section { margin-bottom: 64px; }
+.main-section:last-child { margin-bottom: 0; }
+.steered-by { margin: -16px 0 22px; }
 .section-zh { font-size: 30px; line-height: 1; }
 .see-all { margin-left: auto; font-size: 14px; font-weight: 600; color: var(--red); }
 

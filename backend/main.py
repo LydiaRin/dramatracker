@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import discover, dramas, platforms, subscriptions, watchlist, recommendations
+from routers import discover, dramas, platforms, subscriptions, watchlist
 
 app = FastAPI()
 
@@ -24,5 +24,4 @@ app.include_router(dramas.router)
 app.include_router(platforms.router)
 app.include_router(subscriptions.router)
 app.include_router(watchlist.router)
-app.include_router(recommendations.router)
 
